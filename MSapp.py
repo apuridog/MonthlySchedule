@@ -94,4 +94,40 @@ class ScheduleGenerator:
         output = ["【2026年3月エリートクラス】\nT's Factory\nエリートクラスの皆様\n日頃よりお世話になっております。\n３月のスケジュールご確認お願い致します。\n"]
         for ev in self.categorized_events["elite"]:
             output.append(f"{to_zenkaku(ev['date'])}")
-            output.append(
+            output.append(f"{to_zenkaku(ev['time'])}")
+            if ev['location']: output.append(f"{ev['location']}\n")
+        return "\n".join(output)
+
+# ===== Streamlit UI（画面表示部分） =====
+st.set_page_config(page_title="スケジュール自動振り分けツール", layout="centered")
+
+st.title("🏀 月間スケジュール自動振り分けツール")
+st.markdown("大元のスケジュールテキスト（繋がってしまっているもの）を貼り付けると、各クラスのフォーマットに自動で振り分けます。")
+
+# 入力エリア
+raw_input_text = st.text_area("ここにテキストを貼り付けてください：", height=200)
+
+# 実行ボタン
+if st.button("スケジュールを生成する"):
+    if raw_input_text.strip() == "":
+        st.warning("テキストが入力されていません。")
+    else:
+        # 生成処理を実行
+        generator = ScheduleGenerator(raw_input_text)
+        
+        st.success("スケジュールの振り分けが完了しました！以下のテキストをコピーして使用してください。")
+        
+        # 4つのタブに分けて表示するとスマホでも見やすいです
+        tab1, tab2, tab3, tab4 = st.tabs(["U12/15", "U10", "ステップアップ", "エリート"])
+        
+        with tab1:
+            st.text_area("U12/15 出力結果", generator.generate_u12_15_output(), height=300)
+            
+        with tab2:
+            st.text_area("U10 出力結果", generator.generate_u10_output(), height=300)
+            
+        with tab3:
+            st.text_area("ステップアップ 出力結果", generator.generate_step_up_output(), height=300)
+            
+        with tab4:
+            st.text_area("エリート 出力結果", generator.generate_elite_output(), height=300)
